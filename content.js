@@ -48,8 +48,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (typeof request.replaceText !== "string") {
         throw new Error("Invalid replace text");
       }
+      if (typeof request.useRegex !== "boolean") {
+        request.useRegex = false;
+      }
 
-      const result = findAndReplace(request.searchText, request.replaceText);
+      const result = findAndReplace(request.searchText, request.replaceText, request.useRegex);
       sendResponse({ success: true, ...result });
     } catch (error) {
       console.error("Content script error:", error);
@@ -59,7 +62,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true; // Keep the message channel open for async response
 });
 
-function findAndReplace(searchText, replaceText) {
+function findAndReplace(searchText, replaceText, useRegex = false) {
   try {
     // Get all input and textarea elements
     const formElements = document.querySelectorAll(
@@ -73,22 +76,44 @@ function findAndReplace(searchText, replaceText) {
     let replacementCount = 0;
     let elementsChecked = 0;
 
+    // Create regex pattern if useRegex is true
+    let searchPattern;
+    if (useRegex) {
+      try {
+        searchPattern = new RegExp(searchText, 'g');
+      } catch (regexError) {
+        return { success: false, error: "Invalid regular expression: " + regexError.message };
+      }
+    }
+
     formElements.forEach((element) => {
       try {
-        if (element.value && element.value.includes(searchText)) {
-          // Create a new value with all instances replaced
-          const newValue = element.value.split(searchText).join(replaceText);
+        if (element.value) {
+          let newValue;
+          let matches = 0;
+
+          if (useRegex) {
+            // Use regex replacement
+            if (element.value.match(searchPattern)) {
+              newValue = element.value.replace(searchPattern, replaceText);
+              matches = (element.value.match(searchPattern) || []).length;
+            }
+          } else {
+            // Use simple string replacement
+            if (element.value.includes(searchText)) {
+              newValue = element.value.split(searchText).join(replaceText);
+              matches = element.value.split(searchText).length - 1;
+            }
+          }
 
           // Only update if there was actually a change
-          if (newValue !== element.value) {
+          if (newValue && newValue !== element.value) {
             element.value = newValue;
 
             // Trigger input event to ensure any listeners are notified
             const event = new Event("input", { bubbles: true });
             element.dispatchEvent(event);
 
-            // Count the number of replacements in this element
-            const matches = element.value.split(replaceText).length - 1;
             replacementCount += matches;
           }
         }

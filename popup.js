@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const replaceInput = document.getElementById('replaceText');
   const replaceBtn = document.getElementById('replaceBtn');
   const statusDiv = document.getElementById('status');
+  const useRegexCheckbox = document.getElementById('useRegex');
+  const elementsCheckedSpan = document.getElementById('elementsChecked');
+  const replacementsCountSpan = document.getElementById('replacementsCount');
 
   function showStatus(message, isError = false) {
     statusDiv.textContent = message;
@@ -81,7 +84,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const response = await chrome.tabs.sendMessage(tab.id, {
         action: 'replaceText',
         searchText,
-        replaceText
+        replaceText,
+        useRegex: useRegexCheckbox.checked
       });
 
       if (response.success) {
@@ -89,10 +93,18 @@ document.addEventListener('DOMContentLoaded', function() {
           ? `Replaced ${response.count} occurrence${response.count > 1 ? 's' : ''}` 
           : 'No matches found';
         showStatus(message, response.count === 0);
+        
+        // Update info display
+        elementsCheckedSpan.textContent = response.elementsChecked || 0;
+        replacementsCountSpan.textContent = response.count || 0;
       } else if (response.error) {
         showStatus(`Error: ${response.error}`, true);
+        elementsCheckedSpan.textContent = '0';
+        replacementsCountSpan.textContent = '0';
       } else {
         showStatus('No matches found', true);
+        elementsCheckedSpan.textContent = '0';
+        replacementsCountSpan.textContent = '0';
       }
     } catch (error) {
       console.error('Error:', error);

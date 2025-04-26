@@ -50,6 +50,27 @@
       background-color: #f2dede;
       color: #a94442;
     }
+    .checkbox {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin: 0;
+      cursor: pointer;
+    }
+    .info {
+      margin-top: 15px;
+      padding: 8px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .info p {
+      margin: 5px 0;
+    }
   </style>
 </head>
 <body>
@@ -61,8 +82,17 @@
     <label for="replaceText">Replace with:</label>
     <input type="text" id="replaceText" placeholder="Text to replace with...">
   </div>
+  <div class="form-group checkbox">
+    <label>
+      <input type="checkbox" id="useRegex"> Use Regular Expression
+    </label>
+  </div>
   <button id="replaceBtn">Replace All</button>
   <div id="status" class="status"></div>
+  <div id="info" class="info">
+    <p>Elements checked: <span id="elementsChecked">0</span></p>
+    <p>Replacements made: <span id="replacementsCount">0</span></p>
+  </div>
   <script src="popup.js"></script>
 </body>
 </html>
