@@ -7,7 +7,7 @@ function initializeContentScript() {
       chrome.runtime.sendMessage(
         { action: "contentScriptReady" },
         (response) => {
-          if (chrome.runtime.lastError) {
+          if (chrome.runtime.lastError || !response || !response.success) {
             console.log("Retrying initialization...");
             setTimeout(tryInit, 1000);
             return;

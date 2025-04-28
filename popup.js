@@ -69,9 +69,12 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!isReady) {
         try {
           await injectContentScript(tab.id);
-          // Wait a moment for the script to initialize
-          await new Promise(res => setTimeout(res, 500));
-          isReady = await isContentScriptReady(tab.id);
+          // Wait for the script to initialize with multiple retries
+          for (let i = 0; i < 3; i++) {
+            await new Promise(res => setTimeout(res, 1000));
+            isReady = await isContentScriptReady(tab.id);
+            if (isReady) break;
+          }
         } catch (injectErr) {
           showStatus('Failed to inject content script: ' + injectErr, true);
           return;
